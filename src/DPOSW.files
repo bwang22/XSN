@@ -49,6 +49,9 @@ core_io.h
 core_memusage.h
 core_read.cpp
 core_write.cpp
+qt/forms/merchantslist.ui
+qt/merchantslist.cpp
+qt/merchantslist.h
 qt/tposaddressestablemodel.cpp
 qt/tposaddressestablemodel.h
 qt/tpospage.cpp

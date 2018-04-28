@@ -77,6 +77,8 @@ WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
     sendCoinsPage = new SendCoinsDialog(platformStyle);
     tposPage = new TPoSPage(this);
 
+    merchantsListPage = new MerchantsList(this);
+
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
 
@@ -85,6 +87,7 @@ WalletView::WalletView(const PlatformStyle *platformStyle, QWidget *parent):
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
     addWidget(tposPage);
+    addWidget(merchantsListPage);
 
     QSettings settings;
     if (settings.value("fShowMasternodesTab").toBool()) {
@@ -226,6 +229,11 @@ void WalletView::gotoMasternodePage()
     if (settings.value("fShowMasternodesTab").toBool()) {
         setCurrentWidget(masternodeListPage);
     }
+}
+
+void WalletView::gotoTPoSMerchantsPage()
+{
+    setCurrentWidget(merchantsListPage);
 }
 
 void WalletView::gotoReceiveCoinsPage()

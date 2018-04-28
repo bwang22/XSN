@@ -147,6 +147,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *platformStyle, const NetworkStyle *n
     overviewAction(0),
     historyAction(0),
     masternodeAction(0),
+    tposMerchantsAction(0),
     quitAction(0),
     sendCoinsAction(0),
     sendCoinsMenuAction(0),
@@ -404,6 +405,14 @@ void BitcoinGUI::createActions()
 #endif
     tabGroup->addAction(historyAction);
 
+
+    tposMerchantsAction = new QAction(QIcon(":/icons/" + theme + "/history"), tr("&TPoS merchants"), this);
+    tposMerchantsAction->setStatusTip(tr("Active TPoS merchants"));
+    tposMerchantsAction->setToolTip(tposMerchantsAction->statusTip());
+    tposMerchantsAction->setCheckable(true);
+
+    tabGroup->addAction(tposMerchantsAction);
+
 #ifdef ENABLE_WALLET
     QSettings settings;
     if (settings.value("fShowMasternodesTab").toBool()) {
@@ -435,6 +444,9 @@ void BitcoinGUI::createActions()
     connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
+
+    connect(tposMerchantsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(tposMerchantsAction, SIGNAL(triggered()), this, SLOT(gotoMerchantPage()));
 #endif // ENABLE_WALLET
 
     quitAction = new QAction(QIcon(":/icons/" + theme + "/quit"), tr("E&xit"), this);
@@ -656,6 +668,10 @@ void BitcoinGUI::createToolBarWidgets(QToolBar *toolbar)
 
 //    std::tie(label, merchantAction) = CreateWidgetHelper("merchant", tr("Merchant"));
 
+    shortcut = CreateShortcut(Qt::Key_7);
+
+    std::tie(label, tposMerchantsAction) = CreateWidgetHelper("transactions", tr("Active TPoS merchants"));
+
     QSettings settings;
     if (settings.value("fShowMasternodesTab").toBool()) {
         shortcut = CreateShortcut(Qt::Key_8);
@@ -663,6 +679,10 @@ void BitcoinGUI::createToolBarWidgets(QToolBar *toolbar)
         connect(masternodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
         connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
     }
+
+//    shortcut = CreateShortcut(Qt::Key_9);
+
+//    std::tie(label, tposMerchantsAction) = CreateWidgetHelper("TPoS merchants", tr("Show list of TPoS merchants"));
 
 
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
@@ -680,7 +700,10 @@ void BitcoinGUI::createToolBarWidgets(QToolBar *toolbar)
     connect(ghostCoinsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(ghostCoinsAction, SIGNAL(triggered()), this, SLOT(gotoStealthModePage()));
     connect(merchantAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(merchantAction, SIGNAL(triggered()), this, SLOT(gotoMerchantPage()));
+    //connect(merchantAction, SIGNAL(triggered()), this, SLOT(gotoMerchantPage()));
+
+    connect(tposMerchantsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(tposMerchantsAction, SIGNAL(triggered()), this, SLOT(gotoMerchantPage()));
 #endif // ENABLE_WALLET
 }
 
@@ -1038,6 +1061,13 @@ void BitcoinGUI::gotoMasternodePage()
         masternodeAction->setChecked(true);
         if (walletFrame) walletFrame->gotoMasternodePage();
     }
+}
+
+void BitcoinGUI::gotoMerchantPage()
+{
+    tposMerchantsAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoTPoSMerchantsPage();
+
 }
 
 void BitcoinGUI::gotoReceiveCoinsPage()

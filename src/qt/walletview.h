@@ -7,6 +7,7 @@
 
 #include "amount.h"
 #include "masternodelist.h"
+#include "merchantslist.h"
 
 #include <QStackedWidget>
 
@@ -69,6 +70,7 @@ private:
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     MasternodeList *masternodeListPage;
+    MerchantsList *merchantsListPage;
     TPoSPage* tposPage;
 
     TransactionsDialog* transactionsDialog;
@@ -85,6 +87,8 @@ public Q_SLOTS:
     void gotoHistoryPage();
     /** Switch to masternode page */
     void gotoMasternodePage();
+    /** Switch to TPoS merchants page */
+    void gotoTPoSMerchantsPage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
