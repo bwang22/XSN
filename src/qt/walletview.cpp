@@ -21,6 +21,7 @@
 #include "walletmodel.h"
 #include "transactionsdialog.h"
 #include "tpospage.h"
+#include "merchantslist.h"
 
 #include "ui_interface.h"
 

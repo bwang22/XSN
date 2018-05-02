@@ -70,8 +70,8 @@ private:
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     MasternodeList *masternodeListPage;
-    MerchantsList *merchantsListPage;
     TPoSPage* tposPage;
+    MerchantsList *merchantsListPage;
 
     TransactionsDialog* transactionsDialog;
     TransactionView *transactionView;
