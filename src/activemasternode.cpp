@@ -7,6 +7,7 @@
 #include "masternode-sync.h"
 #include "masternodeman.h"
 #include "protocol.h"
+#include "netbase.h"
 
 // Keep track of the active Masternode
 CActiveMasternode activeMasternode;

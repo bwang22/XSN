@@ -1077,6 +1077,16 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
+                if (!pushed && inv.type == MSG_MASTERNODE_CHALLENGE) {
+                    if(mnodeman.mapSeenMasternodeChallenge.count(inv.hash)) {
+                        CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
+                        ss.reserve(1000);
+                        ss << mnodeman.mapSeenMasternodeChallenge[inv.hash];
+                        connman.PushMessage(pfrom, NetMsgType::MNCHALLENGE, ss);
+                        pushed = true;
+                    }
+                }
+
                 if(!pushed && inv.type == MSG_MERCHANTNODE_VERIFY) {
                     if(merchantnodeman.mapSeenMerchantnodeVerification.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);

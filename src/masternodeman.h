@@ -58,6 +58,9 @@ private:
     std::map<COutPoint, std::map<CNetAddr, int64_t> > mWeAskedForMasternodeListEntry;
     // who we asked for the masternode verification
     std::map<CNetAddr, CMasternodeVerification> mWeAskedForVerification;
+    // who we asked for the masternode challenge verification
+    std::map<CNetAddr, CMasternodeChallenge> mWeAskedForChallengeVerification;
+
 
     // these maps are used for masternode recovery from MASTERNODE_NEW_START_REQUIRED state
     std::map<uint256, std::pair< int64_t, std::set<CNetAddr> > > mMnbRecoveryRequests;
@@ -87,6 +90,8 @@ public:
     std::map<uint256, CMasternodePing> mapSeenMasternodePing;
     // Keep track of all verifications I've seen
     std::map<uint256, CMasternodeVerification> mapSeenMasternodeVerification;
+    //Keep track of all challenge verifications I`ve seen
+    std::map<uint256, CMasternodeChallenge> mapSeenMasternodeChallenge;
     // keep track of dsq count to prevent masternodes from gaming darksend queue
     int64_t nDsqCount;
 
@@ -186,6 +191,7 @@ public:
     void DoFullVerificationStep(CConnman& connman);
     void CheckSameAddr();
     bool SendVerifyRequest(const CAddress& addr, const std::vector<CMasternode*>& vSortedByAddr, CConnman& connman);
+    bool SendChallengeRequest(const CAddress& addr, const std::vector<CMasternode*>& vSortedByAddr, CConnman& connman);
     void SendVerifyReply(CNode* pnode, CMasternodeVerification& mnv, CConnman& connman);
     void ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv);
     void ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv);

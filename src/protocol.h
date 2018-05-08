@@ -249,6 +249,7 @@ extern const char *MNVERIFY;
 extern const char *MERCHANTNODEVERIFY;
 extern const char *MERCHANTNODEANNOUNCE;
 extern const char *MERCHANTNODEPING;
+extern const char *MNCHALLENGE;
 }
 
 /* Get a vector of all valid message types (see above) */
@@ -370,7 +371,8 @@ enum {
     MSG_MASTERNODE_VERIFY,
     MSG_MERCHANTNODE_VERIFY,
     MSG_MERCHANTNODE_ANNOUNCE,
-    MSG_MERCHANTNODE_PING
+    MSG_MERCHANTNODE_PING,
+    MSG_MASTERNODE_CHALLENGE
 };
 
 #endif // BITCOIN_PROTOCOL_H

@@ -30,14 +30,14 @@ UniValue privatesend(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1)
         throw std::runtime_error(
-            "privatesend \"command\"\n"
-            "\nArguments:\n"
-            "1. \"command\"        (string or set of strings, required) The command to execute\n"
-            "\nAvailable commands:\n"
-            "  start       - Start mixing\n"
-            "  stop        - Stop mixing\n"
-            "  reset       - Reset mixing\n"
-            );
+                "privatesend \"command\"\n"
+                "\nArguments:\n"
+                "1. \"command\"        (string or set of strings, required) The command to execute\n"
+                "\nAvailable commands:\n"
+                "  start       - Start mixing\n"
+                "  stop        - Stop mixing\n"
+                "  reset       - Reset mixing\n"
+                );
 
     if(params[0].get_str() == "start") {
         {
@@ -71,8 +71,8 @@ UniValue getpoolinfo(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 0)
         throw std::runtime_error(
-            "getpoolinfo\n"
-            "Returns an object containing mixing pool related information.\n");
+                "getpoolinfo\n"
+                "Returns an object containing mixing pool related information.\n");
 
 #ifdef ENABLE_WALLET
     CPrivateSendBase* pprivateSendBase = fMasterNode ? (CPrivateSendBase*)&privateSendServer : (CPrivateSendBase*)&privateSendClient;
@@ -93,7 +93,7 @@ UniValue getpoolinfo(const UniValue& params, bool fHelp)
     if (pwalletMain) {
         obj.push_back(Pair("keys_left",     pwalletMain->nKeysLeftSinceAutoBackup));
         obj.push_back(Pair("warnings",      pwalletMain->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
-                                                ? "WARNING: keypool is almost depleted!" : ""));
+                           ? "WARNING: keypool is almost depleted!" : ""));
     }
 #else // ENABLE_WALLET
     UniValue obj(UniValue::VOBJ);
@@ -119,15 +119,15 @@ UniValue masternode(const UniValue& params, bool fHelp)
 #endif // ENABLE_WALLET
 
     if (fHelp  ||
-        (
-#ifdef ENABLE_WALLET
-            strCommand != "start-alias" && strCommand != "start-all" && strCommand != "start-missing" &&
-         strCommand != "start-disabled" && strCommand != "outputs" &&
-#endif // ENABLE_WALLET
-         strCommand != "list" && strCommand != "list-conf" && strCommand != "count" &&
-         strCommand != "debug" && strCommand != "current" && strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" &&
-         strCommand != "connect" && strCommand != "status"))
-            throw std::runtime_error(
+            (
+            #ifdef ENABLE_WALLET
+                strCommand != "start-alias" && strCommand != "start-all" && strCommand != "start-missing" &&
+                strCommand != "start-disabled" && strCommand != "outputs" &&
+            #endif // ENABLE_WALLET
+                strCommand != "list" && strCommand != "list-conf" && strCommand != "count" &&
+                strCommand != "debug" && strCommand != "current" && strCommand != "winner" && strCommand != "winners" && strCommand != "genkey" &&
+                strCommand != "connect" && strCommand != "status"))
+        throw std::runtime_error(
                 "masternode \"command\"...\n"
                 "Set of commands to execute masternode related actions\n"
                 "\nArguments:\n"
@@ -136,11 +136,11 @@ UniValue masternode(const UniValue& params, bool fHelp)
                 "  count        - Print number of all known masternodes (optional: 'ps', 'enabled', 'all', 'qualify')\n"
                 "  current      - Print info on current masternode winner to be paid the next block (calculated locally)\n"
                 "  genkey       - Generate new masternodeprivkey\n"
-#ifdef ENABLE_WALLET
+            #ifdef ENABLE_WALLET
                 "  outputs      - Print masternode compatible outputs\n"
                 "  start-alias  - Start single remote masternode by assigned alias configured in masternode.conf\n"
                 "  start-<mode> - Start remote masternodes configured in masternode.conf (<mode>: 'all', 'missing', 'disabled')\n"
-#endif // ENABLE_WALLET
+            #endif // ENABLE_WALLET
                 "  status       - Print masternode status information\n"
                 "  list         - Print list of all known masternodes (see masternodelist for more info)\n"
                 "  list-conf    - Print masternode.conf in JSON format\n"
@@ -202,8 +202,8 @@ UniValue masternode(const UniValue& params, bool fHelp)
 
         if (strMode == "all")
             return strprintf("Total: %d (PS Compatible: %d / Enabled: %d / Qualify: %d)",
-                mnodeman.size(), mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION),
-                mnodeman.CountEnabled(), nCount);
+                             mnodeman.size(), mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION),
+                             mnodeman.CountEnabled(), nCount);
     }
 
     if (strCommand == "current" || strCommand == "winner")
@@ -455,31 +455,31 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 strMode != "rank" && strMode != "status"))
     {
         throw std::runtime_error(
-                "masternodelist ( \"mode\" \"filter\" )\n"
-                "Get a list of masternodes in different modes\n"
-                "\nArguments:\n"
-                "1. \"mode\"      (string, optional/required to use filter, defaults = status) The mode to run list in\n"
-                "2. \"filter\"    (string, optional) Filter results. Partial match by outpoint by default in all modes,\n"
-                "                                    additional matches in some modes are also available\n"
-                "\nAvailable modes:\n"
-                "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
-                "                   (since latest issued \"masternode start/start-many/start-alias\")\n"
-                "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
-                "  full           - Print info in format 'status protocol payee lastseen activeseconds lastpaidtime lastpaidblock IP'\n"
-                "                   (can be additionally filtered, partial match)\n"
-                "  info           - Print info in format 'status protocol payee lastseen activeseconds sentinelversion sentinelstate IP'\n"
-                "                   (can be additionally filtered, partial match)\n"
-                "  lastpaidblock  - Print the last block height a node was paid on the network\n"
-                "  lastpaidtime   - Print the last time a node was paid on the network\n"
-                "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
-                "  payee          - Print XSN address associated with a masternode (can be additionally filtered,\n"
-                "                   partial match)\n"
-                "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match)\n"
-                "  pubkey         - Print the masternode (not collateral) public key\n"
-                "  rank           - Print rank of a masternode based on current block\n"
-                "  status         - Print masternode status: PRE_ENABLED / ENABLED / EXPIRED / WATCHDOG_EXPIRED / NEW_START_REQUIRED /\n"
-                "                   UPDATE_REQUIRED / POSE_BAN / OUTPOINT_SPENT (can be additionally filtered, partial match)\n"
-                );
+                    "masternodelist ( \"mode\" \"filter\" )\n"
+                    "Get a list of masternodes in different modes\n"
+                    "\nArguments:\n"
+                    "1. \"mode\"      (string, optional/required to use filter, defaults = status) The mode to run list in\n"
+                    "2. \"filter\"    (string, optional) Filter results. Partial match by outpoint by default in all modes,\n"
+                    "                                    additional matches in some modes are also available\n"
+                    "\nAvailable modes:\n"
+                    "  activeseconds  - Print number of seconds masternode recognized by the network as enabled\n"
+                    "                   (since latest issued \"masternode start/start-many/start-alias\")\n"
+                    "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
+                    "  full           - Print info in format 'status protocol payee lastseen activeseconds lastpaidtime lastpaidblock IP'\n"
+                    "                   (can be additionally filtered, partial match)\n"
+                    "  info           - Print info in format 'status protocol payee lastseen activeseconds sentinelversion sentinelstate IP'\n"
+                    "                   (can be additionally filtered, partial match)\n"
+                    "  lastpaidblock  - Print the last block height a node was paid on the network\n"
+                    "  lastpaidtime   - Print the last time a node was paid on the network\n"
+                    "  lastseen       - Print timestamp of when a masternode was last seen on the network\n"
+                    "  payee          - Print XSN address associated with a masternode (can be additionally filtered,\n"
+                    "                   partial match)\n"
+                    "  protocol       - Print protocol of a masternode (can be additionally filtered, exact match)\n"
+                    "  pubkey         - Print the masternode (not collateral) public key\n"
+                    "  rank           - Print rank of a masternode based on current block\n"
+                    "  status         - Print masternode status: PRE_ENABLED / ENABLED / EXPIRED / WATCHDOG_EXPIRED / NEW_START_REQUIRED /\n"
+                    "                   UPDATE_REQUIRED / POSE_BAN / OUTPOINT_SPENT (can be additionally filtered, partial match)\n"
+                    );
     }
 
     if (strMode == "full" || strMode == "lastpaidtime" || strMode == "lastpaidblock") {
@@ -511,37 +511,37 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
             } else if (strMode == "addr") {
                 std::string strAddress = mn.addr.ToString();
                 if (strFilter !="" && strAddress.find(strFilter) == std::string::npos &&
-                    strOutpoint.find(strFilter) == std::string::npos) continue;
+                        strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strAddress));
             } else if (strMode == "full") {
                 std::ostringstream streamFull;
                 streamFull << std::setw(18) <<
-                               mn.GetStatus() << " " <<
-                               mn.nProtocolVersion << " " <<
-                               CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " <<
-                               (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
-                               (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " << std::setw(10) <<
-                               mn.GetLastPaidTime() << " "  << std::setw(6) <<
-                               mn.GetLastPaidBlock() << " " <<
-                               mn.addr.ToString();
+                              mn.GetStatus() << " " <<
+                              mn.nProtocolVersion << " " <<
+                              CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " <<
+                              (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
+                              (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " << std::setw(10) <<
+                              mn.GetLastPaidTime() << " "  << std::setw(6) <<
+                              mn.GetLastPaidBlock() << " " <<
+                              mn.addr.ToString();
                 std::string strFull = streamFull.str();
                 if (strFilter !="" && strFull.find(strFilter) == std::string::npos &&
-                    strOutpoint.find(strFilter) == std::string::npos) continue;
+                        strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strFull));
             } else if (strMode == "info") {
                 std::ostringstream streamInfo;
                 streamInfo << std::setw(18) <<
-                               mn.GetStatus() << " " <<
-                               mn.nProtocolVersion << " " <<
-                               CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " <<
-                               (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
-                               (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
-                               SafeIntVersionToString(mn.lastPing.nSentinelVersion) << " "  <<
-                               (mn.lastPing.fSentinelIsCurrent ? "current" : "expired") << " " <<
-                               mn.addr.ToString();
+                              mn.GetStatus() << " " <<
+                              mn.nProtocolVersion << " " <<
+                              CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " <<
+                              (int64_t)mn.lastPing.sigTime << " " << std::setw(8) <<
+                              (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " <<
+                              SafeIntVersionToString(mn.lastPing.nSentinelVersion) << " "  <<
+                              (mn.lastPing.fSentinelIsCurrent ? "current" : "expired") << " " <<
+                              mn.addr.ToString();
                 std::string strInfo = streamInfo.str();
                 if (strFilter !="" && strInfo.find(strFilter) == std::string::npos &&
-                    strOutpoint.find(strFilter) == std::string::npos) continue;
+                        strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strInfo));
             } else if (strMode == "lastpaidblock") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
@@ -556,11 +556,11 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
                 CBitcoinAddress address(mn.pubKeyCollateralAddress.GetID());
                 std::string strPayee = address.ToString();
                 if (strFilter !="" && strPayee.find(strFilter) == std::string::npos &&
-                    strOutpoint.find(strFilter) == std::string::npos) continue;
+                        strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strPayee));
             } else if (strMode == "protocol") {
                 if (strFilter !="" && strFilter != strprintf("%d", mn.nProtocolVersion) &&
-                    strOutpoint.find(strFilter) == std::string::npos) continue;
+                        strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, (int64_t)mn.nProtocolVersion));
             } else if (strMode == "pubkey") {
                 if (strFilter !="" && strOutpoint.find(strFilter) == std::string::npos) continue;
@@ -568,7 +568,7 @@ UniValue masternodelist(const UniValue& params, bool fHelp)
             } else if (strMode == "status") {
                 std::string strStatus = mn.GetStatus();
                 if (strFilter !="" && strStatus.find(strFilter) == std::string::npos &&
-                    strOutpoint.find(strFilter) == std::string::npos) continue;
+                        strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, strStatus));
             }
         }
@@ -600,21 +600,21 @@ UniValue masternodebroadcast(const UniValue& params, bool fHelp)
         strCommand = params[0].get_str();
 
     if (fHelp  ||
-        (
-#ifdef ENABLE_WALLET
-            strCommand != "create-alias" && strCommand != "create-all" &&
-#endif // ENABLE_WALLET
-            strCommand != "decode" && strCommand != "relay"))
+            (
+            #ifdef ENABLE_WALLET
+                strCommand != "create-alias" && strCommand != "create-all" &&
+            #endif // ENABLE_WALLET
+                strCommand != "decode" && strCommand != "relay"))
         throw std::runtime_error(
                 "masternodebroadcast \"command\"...\n"
                 "Set of commands to create and relay masternode broadcast messages\n"
                 "\nArguments:\n"
                 "1. \"command\"        (string or set of strings, required) The command to execute\n"
                 "\nAvailable commands:\n"
-#ifdef ENABLE_WALLET
+            #ifdef ENABLE_WALLET
                 "  create-alias  - Create single remote masternode broadcast message by assigned alias configured in masternode.conf\n"
                 "  create-all    - Create remote masternode broadcast messages for all masternodes configured in masternode.conf\n"
-#endif // ENABLE_WALLET
+            #endif // ENABLE_WALLET
                 "  decode        - Decode masternode broadcast message\n"
                 "  relay         - Relay masternode broadcast message to the network\n"
                 );
@@ -834,18 +834,35 @@ UniValue sentinelping(const UniValue& params, bool fHelp)
 {
     if (fHelp || params.size() != 1) {
         throw std::runtime_error(
-            "sentinelping version\n"
-            "\nSentinel ping.\n"
-            "\nArguments:\n"
-            "1. version           (string, required) Sentinel version in the form \"x.x.x\"\n"
-            "\nResult:\n"
-            "state                (boolean) Ping result\n"
-            "\nExamples:\n"
-            + HelpExampleCli("sentinelping", "1.0.2")
-            + HelpExampleRpc("sentinelping", "1.0.2")
-        );
+                    "sentinelping version\n"
+                    "\nSentinel ping.\n"
+                    "\nArguments:\n"
+                    "1. version           (string, required) Sentinel version in the form \"x.x.x\"\n"
+                    "\nResult:\n"
+                    "state                (boolean) Ping result\n"
+                    "\nExamples:\n"
+                    + HelpExampleCli("sentinelping", "1.0.2")
+                    + HelpExampleRpc("sentinelping", "1.0.2")
+                    );
     }
 
     activeMasternode.UpdateSentinelPing(StringVersionToInt(params[0].get_str()));
     return true;
 }
+
+UniValue masternodechallenge(const UniValue &params, bool fHelp)
+{
+
+    //string strNode = params[0].get_str();
+    string strNode = params[0].get_str();
+
+    std::vector<CMasternode*> vSortedByAddr;
+
+    std::vector<CNodeStats> vstats;
+    g_connman->GetNodeStats(vstats);
+
+    mnodeman.SendChallengeRequest(vstats.front().addr, vSortedByAddr, *g_connman);
+
+    return NullUniValue;
+}
+

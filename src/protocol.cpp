@@ -70,6 +70,7 @@ const char *MERCHANTNODEANNOUNCE="mrnan";
 const char *MERCHANTNODEPING="mrnp";
 const char *MERCHANTNODESEG="mrnseg";
 const char *MERCHANTSYNCSTATUSCOUNT="mrnssc";
+const char *MNCHALLENGE="mnc";
 }
 
 static const char* ppszTypeName[] =
@@ -99,6 +100,7 @@ static const char* ppszTypeName[] =
     NetMsgType::MERCHANTNODEVERIFY,
     NetMsgType::MERCHANTNODEANNOUNCE,
     NetMsgType::MERCHANTNODEPING,
+    NetMsgType::MNCHALLENGE
 };
 
 /** All known message types. Keep this in the same order as the list of
@@ -156,7 +158,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::MNVERIFY,
     NetMsgType::MERCHANTNODEVERIFY,
     NetMsgType::MERCHANTNODEANNOUNCE,
-    NetMsgType::MERCHANTNODEPING
+    NetMsgType::MERCHANTNODEPING,
+    NetMsgType::MNCHALLENGE
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

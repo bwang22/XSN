@@ -244,7 +244,7 @@ public:
             return true;
         }
         if(!sporkManager.IsSporkActive(SPORK_14_REQUIRE_SENTINEL_FLAG) &&
-           (nActiveState == MASTERNODE_WATCHDOG_EXPIRED)) {
+                (nActiveState == MASTERNODE_WATCHDOG_EXPIRED)) {
             return true;
         }
 
@@ -405,6 +405,57 @@ public:
         CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
         g_connman->RelayInv(inv);
     }
+};
+
+class CMasternodeChallenge
+{
+public:
+    CTxIn vin1{};
+    CTxIn vin2{};
+    CService addr{};
+    int nonce{};
+    int nBlockHeight{};
+    std::vector<unsigned char> vchSig1{};
+    std::vector<unsigned char> vchSig2{};
+
+    CMasternodeChallenge() = default;
+
+    CMasternodeChallenge(CService addr, int nonce, int nBlockHeight) :
+        addr(addr),
+        nonce(nonce),
+        nBlockHeight(nBlockHeight)
+    {}
+
+    ADD_SERIALIZE_METHODS;
+
+    template <typename Stream, typename Operation>
+    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+        READWRITE(vin1);
+        READWRITE(vin2);
+        READWRITE(addr);
+        READWRITE(nonce);
+        READWRITE(nBlockHeight);
+        READWRITE(vchSig1);
+        READWRITE(vchSig2);
+    }
+
+    uint256 GetHash() const
+    {
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << 228;
+        //        ss << vin2;
+        //        ss << addr;
+        //        ss << nonce;
+        //        ss << nBlockHeight;
+        return ss.GetHash();
+    }
+
+    void Relay() const
+    {
+        CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
+        g_connman->RelayInv(inv);
+    }
+
 };
 
 #endif
