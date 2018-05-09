@@ -196,6 +196,10 @@ public:
     void ProcessVerifyReply(CNode* pnode, CMasternodeVerification& mnv);
     void ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerification& mnv);
 
+    void SendChallengeReply(CNode* pnode, CMasternodeChallenge& mnc, CConnman& connman);
+    void ProcessChallengeReply(CNode* pnode, CMasternodeChallenge& mnc);
+    void ProcessChallengeBroadcast(CNode* pnode, const CMasternodeChallenge& mnc);
+
     /// Return the number of (unique) Masternodes
     int size() { return mapMasternodes.size(); }
 

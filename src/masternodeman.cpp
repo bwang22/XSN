@@ -912,17 +912,15 @@ void CMasternodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CData
 
         if(!masternodeSync.IsMasternodeListSynced()) return;
 
-        //???????
-
         if(mnc.vchSig1.empty()) {
             // CASE 1: someone asked me to verify myself /IP we are using/
-            //SendVerifyReply(pfrom, mnv, connman);
+            SendChallengeReply(pfrom, mnc, connman);
         } else if (mnc.vchSig2.empty()) {
             // CASE 2: we _probably_ got verification we requested from some masternode
-            //ProcessVerifyReply(pfrom, mnv);
+            ProcessChallengeReply(pfrom, mnc);
         } else {
             // CASE 3: we _probably_ got verification broadcast signed by some masternode which verified another one
-            //ProcessVerifyBroadcast(pfrom, mnv);
+            ProcessChallengeBroadcast(pfrom, mnc);
         }
 
     }
@@ -1372,6 +1370,62 @@ void CMasternodeMan::ProcessVerifyBroadcast(CNode* pnode, const CMasternodeVerif
             LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- PoSe score increased for %d fake masternodes, addr %s\n",
                       nCount, pmn1->addr.ToString());
     }
+}
+
+void CMasternodeMan::SendChallengeReply(CNode *pnode, CMasternodeChallenge &mnc, CConnman &connman)
+{
+
+    std::cout << "Challenge reply"<< ": ---"<< "---" << std::endl;
+
+//    if(netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-reply")) {
+//        // peer should not ask us that often
+//        LogPrintf("MasternodeMan::SendVerifyReply -- ERROR: peer already asked me recently, peer=%d\n", pnode->id);
+//        Misbehaving(pnode->id, 20);
+//        return;
+//    }
+
+//    uint256 blockHash;
+//    if(!GetBlockHash(blockHash, mnv.nBlockHeight)) {
+//        LogPrintf("MasternodeMan::SendVerifyReply -- can't get block hash for unknown block height %d, peer=%d\n", mnv.nBlockHeight, pnode->id);
+//        return;
+//    }
+
+//    std::string strMessage = strprintf("%s%d%s", activeMasternode.service.ToString(false), mnv.nonce, blockHash.ToString());
+
+//    if(!CMessageSigner::SignMessage(strMessage, mnv.vchSig1, activeMasternode.keyMasternode)) {
+//        LogPrintf("MasternodeMan::SendVerifyReply -- SignMessage() failed\n");
+//        return;
+//    }
+
+    std::string str = "Hello world";
+    mnc.vchSig1 = std::vector<unsigned char>(str.begin(), str.end());
+
+//    std::string strError;
+
+//    if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, mnv.vchSig1, strMessage, strError)) {
+//        LogPrintf("MasternodeMan::SendVerifyReply -- VerifyMessage() failed, error: %s\n", strError);
+//        return;
+//    }
+
+    connman.PushMessage(pnode, NetMsgType::MNCHALLENGE, mnc);
+    netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNCHALLENGE)+"-reply");
+
+
+}
+
+void CMasternodeMan::ProcessChallengeReply(CNode *pnode, CMasternodeChallenge &mnc)
+{
+//    std::string str = "Hello world";
+//    mnc.vchSig1 = std::vector<unsigned char>(str.begin(), str.end());
+    std::cout << "Process reply"<< ": ---"<< "---" << std::endl;
+
+}
+
+void CMasternodeMan::ProcessChallengeBroadcast(CNode *pnode, const CMasternodeChallenge &mnc)
+{
+
+    std::cout << "Broadcast reply"<< ": ---"<< "---" << std::endl;
+
 }
 
 std::string CMasternodeMan::ToString() const
