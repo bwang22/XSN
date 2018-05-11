@@ -1377,35 +1377,35 @@ void CMasternodeMan::SendChallengeReply(CNode *pnode, CMasternodeChallenge &mnc,
 
     std::cout << "Challenge reply"<< ": ---"<< "---" << std::endl;
 
-//    if(netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-reply")) {
-//        // peer should not ask us that often
-//        LogPrintf("MasternodeMan::SendVerifyReply -- ERROR: peer already asked me recently, peer=%d\n", pnode->id);
-//        Misbehaving(pnode->id, 20);
-//        return;
-//    }
+    if(netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-reply")) {
+        // peer should not ask us that often
+        LogPrintf("MasternodeMan::SendVerifyReply -- ERROR: peer already asked me recently, peer=%d\n", pnode->id);
+        Misbehaving(pnode->id, 20);
+        return;
+    }
 
-//    uint256 blockHash;
-//    if(!GetBlockHash(blockHash, mnv.nBlockHeight)) {
-//        LogPrintf("MasternodeMan::SendVerifyReply -- can't get block hash for unknown block height %d, peer=%d\n", mnv.nBlockHeight, pnode->id);
-//        return;
-//    }
+    uint256 blockHash;
+    if(!GetBlockHash(blockHash, mnc.nBlockHeight)) {
+        LogPrintf("MasternodeMan::SendVerifyReply -- can't get block hash for unknown block height %d, peer=%d\n", mnc.nBlockHeight, pnode->id);
+        return;
+    }
 
-//    std::string strMessage = strprintf("%s%d%s", activeMasternode.service.ToString(false), mnv.nonce, blockHash.ToString());
+    std::string strMessage = strprintf("%s%d%s", activeMasternode.service.ToString(false), mnc.nonce, blockHash.ToString());
 
-//    if(!CMessageSigner::SignMessage(strMessage, mnv.vchSig1, activeMasternode.keyMasternode)) {
-//        LogPrintf("MasternodeMan::SendVerifyReply -- SignMessage() failed\n");
-//        return;
-//    }
+    if(!CMessageSigner::SignMessage(strMessage, mnc.vchSig1, activeMasternode.keyMasternode)) {
+        LogPrintf("MasternodeMan::SendVerifyReply -- SignMessage() failed\n");
+        return;
+    }
 
-    std::string str = "Hello world";
-    mnc.vchSig1 = std::vector<unsigned char>(str.begin(), str.end());
+//    std::string str = "Hello world";
+//    mnc.vchSig1 = std::vector<unsigned char>(str.begin(), str.end());
 
-//    std::string strError;
+    std::string strError;
 
-//    if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, mnv.vchSig1, strMessage, strError)) {
-//        LogPrintf("MasternodeMan::SendVerifyReply -- VerifyMessage() failed, error: %s\n", strError);
-//        return;
-//    }
+    if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, mnc.vchSig1, strMessage, strError)) {
+        LogPrintf("MasternodeMan::SendVerifyReply -- VerifyMessage() failed, error: %s\n", strError);
+        return;
+    }
 
     connman.PushMessage(pnode, NetMsgType::MNCHALLENGE, mnc);
     netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNCHALLENGE)+"-reply");
@@ -1415,9 +1415,117 @@ void CMasternodeMan::SendChallengeReply(CNode *pnode, CMasternodeChallenge &mnc,
 
 void CMasternodeMan::ProcessChallengeReply(CNode *pnode, CMasternodeChallenge &mnc)
 {
-//    std::string str = "Hello world";
-//    mnc.vchSig1 = std::vector<unsigned char>(str.begin(), str.end());
     std::cout << "Process reply"<< ": ---"<< "---" << std::endl;
+
+    std::string strError;
+
+    // did we even ask for it? if that's the case we should have matching fulfilled request
+    if(!netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNCHALLENGE)+"-request")) {
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: we didn't ask for verification of %s, peer=%d\n", pnode->addr.ToString(), pnode->id);
+        Misbehaving(pnode->id, 20);
+        return;
+    }
+
+    // Received nonce for a known address must match the one we sent
+    if(mWeAskedForChallengeVerification[pnode->addr].nonce != mnc.nonce) {
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: wrong nounce: requested=%d, received=%d, peer=%d\n",
+                  mWeAskedForChallengeVerification[pnode->addr].nonce, mnc.nonce, pnode->id);
+        Misbehaving(pnode->id, 20);
+        return;
+    }
+
+
+    // Received nBlockHeight for a known address must match the one we sent
+    if(mWeAskedForChallengeVerification[pnode->addr].nBlockHeight != mnc.nBlockHeight) {
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: wrong nBlockHeight: requested=%d, received=%d, peer=%d\n",
+                  mWeAskedForChallengeVerification[pnode->addr].nBlockHeight, mnc.nBlockHeight, pnode->id);
+        Misbehaving(pnode->id, 20);
+        return;
+    }
+
+    uint256 blockHash;
+    if(!GetBlockHash(blockHash, mnc.nBlockHeight)) {
+        // this shouldn't happen...
+        LogPrintf("MasternodeMan::ProcessVerifyReply -- can't get block hash for unknown block height %d, peer=%d\n", mnc.nBlockHeight, pnode->id);
+        return;
+    }
+
+    if(netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNCHALLENGE)+"-done")) {
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: already verified %s recently\n", pnode->addr.ToString());
+        Misbehaving(pnode->id, 20);
+        return;
+    }
+
+    {
+        LOCK(cs);
+
+        CMasternode* prealMasternode = NULL;
+        std::vector<CMasternode*> vpMasternodesToBan;
+        std::string strMessage1 = strprintf("%s%d%s", pnode->addr.ToString(false), mnc.nonce, blockHash.ToString());
+        for (auto& mnpair : mapMasternodes) {
+            if(CAddress(mnpair.second.addr, NODE_NETWORK) == pnode->addr) {
+                if(CMessageSigner::VerifyMessage(mnpair.second.pubKeyMasternode, mnc.vchSig1, strMessage1, strError)) {
+                    // found it!
+                    prealMasternode = &mnpair.second;
+                    if(!mnpair.second.IsPoSeVerified()) {
+                        mnpair.second.DecreasePoSeBanScore();
+                    }
+                    netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNCHALLENGE)+"-done");
+
+                    // we can only broadcast it if we are an activated masternode
+                    if(activeMasternode.outpoint == COutPoint()) continue;
+                    // update ...
+                    mnc.addr = mnpair.second.addr;
+                    mnc.vin1 = mnpair.second.vin;
+                    mnc.vin2 = CTxIn(activeMasternode.outpoint);
+                    std::string strMessage2 = strprintf("%s%d%s%s%s", mnc.addr.ToString(false), mnc.nonce, blockHash.ToString(),
+                                                        mnc.vin1.prevout.ToStringShort(), mnc.vin2.prevout.ToStringShort());
+                    // ... and sign it
+                    if(!CMessageSigner::SignMessage(strMessage2, mnc.vchSig2, activeMasternode.keyMasternode)) {
+                        LogPrintf("MasternodeMan::ProcessVerifyReply -- SignMessage() failed\n");
+                        return;
+                    }
+
+//                    std::string str = "Hello world";
+//                    mnc.vchSig2 = std::vector<unsigned char>(str.begin(), str.end());
+
+                    std::string strError;
+
+                    if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, mnc.vchSig2, strMessage2, strError)) {
+                        LogPrintf("MasternodeMan::ProcessVerifyReply -- VerifyMessage() failed, error: %s\n", strError);
+                        return;
+                    }
+
+                    mWeAskedForChallengeVerification[pnode->addr] = mnc;
+                    mapSeenMasternodeChallenge.insert(std::make_pair(mnc.GetHash(), mnc));
+                    mnc.Relay();
+
+                } else {
+                    vpMasternodesToBan.push_back(&mnpair.second);
+                }
+            }
+        }
+        // no real masternode found?...
+        if(!prealMasternode) {
+            // this should never be the case normally,
+            // only if someone is trying to game the system in some way or smth like that
+            LogPrintf("CMasternodeMan::ProcessVerifyReply -- ERROR: no real masternode found for addr %s\n", pnode->addr.ToString());
+            Misbehaving(pnode->id, 20);
+            return;
+        }
+        LogPrintf("CMasternodeMan::ProcessVerifyReply -- verified real masternode %s for addr %s\n",
+                  prealMasternode->vin.prevout.ToStringShort(), pnode->addr.ToString());
+        // increase ban score for everyone else
+        BOOST_FOREACH(CMasternode* pmn, vpMasternodesToBan) {
+            pmn->IncreasePoSeBanScore();
+            LogPrint("masternode", "CMasternodeMan::ProcessVerifyReply -- increased PoSe ban score for %s addr %s, new score %d\n",
+                     prealMasternode->vin.prevout.ToStringShort(), pnode->addr.ToString(), pmn->nPoSeBanScore);
+        }
+        if(!vpMasternodesToBan.empty())
+            LogPrintf("CMasternodeMan::ProcessVerifyReply -- PoSe score increased for %d fake masternodes, addr %s\n",
+                      (int)vpMasternodesToBan.size(), pnode->addr.ToString());
+    }
+
 
 }
 
@@ -1425,6 +1533,107 @@ void CMasternodeMan::ProcessChallengeBroadcast(CNode *pnode, const CMasternodeCh
 {
 
     std::cout << "Broadcast reply"<< ": ---"<< "---" << std::endl;
+
+    std::string strError;
+
+    if(mapSeenMasternodeChallenge.find(mnc.GetHash()) != mapSeenMasternodeChallenge.end()) {
+        // we already have one
+        return;
+    }
+    mapSeenMasternodeChallenge[mnc.GetHash()] = mnc;
+
+    // we don't care about history
+    if(mnc.nBlockHeight < nCachedBlockHeight - MAX_POSE_BLOCKS) {
+        LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- Outdated: current block %d, verification block %d, peer=%d\n",
+                 nCachedBlockHeight, mnc.nBlockHeight, pnode->id);
+        return;
+    }
+
+    if(mnc.vin1.prevout == mnc.vin2.prevout) {
+        LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- ERROR: same vins %s, peer=%d\n",
+                 mnc.vin1.prevout.ToStringShort(), pnode->id);
+        // that was NOT a good idea to cheat and verify itself,
+        // ban the node we received such message from
+        Misbehaving(pnode->id, 100);
+        return;
+    }
+
+    uint256 blockHash;
+    if(!GetBlockHash(blockHash, mnc.nBlockHeight)) {
+        // this shouldn't happen...
+        LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- Can't get block hash for unknown block height %d, peer=%d\n", mnc.nBlockHeight, pnode->id);
+        return;
+    }
+
+    int nRank;
+
+    if (!GetMasternodeRank(mnc.vin2.prevout, nRank, mnc.nBlockHeight, MIN_POSE_PROTO_VERSION)) {
+        LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- Can't calculate rank for masternode %s\n",
+                 mnc.vin2.prevout.ToStringShort());
+        return;
+    }
+
+    if(nRank > MAX_POSE_RANK) {
+        LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- Masternode %s is not in top %d, current rank %d, peer=%d\n",
+                 mnc.vin2.prevout.ToStringShort(), (int)MAX_POSE_RANK, nRank, pnode->id);
+        return;
+    }
+
+    {
+        LOCK(cs);
+
+        std::string strMessage1 = strprintf("%s%d%s", mnc.addr.ToString(false), mnc.nonce, blockHash.ToString());
+        std::string strMessage2 = strprintf("%s%d%s%s%s", mnc.addr.ToString(false), mnc.nonce, blockHash.ToString(),
+                                            mnc.vin1.prevout.ToStringShort(), mnc.vin2.prevout.ToStringShort());
+
+        CMasternode* pmn1 = Find(mnc.vin1.prevout);
+        if(!pmn1) {
+            LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- can't find masternode1 %s\n", mnc.vin1.prevout.ToStringShort());
+            return;
+        }
+
+        CMasternode* pmn2 = Find(mnc.vin2.prevout);
+        if(!pmn2) {
+            LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- can't find masternode2 %s\n", mnc.vin2.prevout.ToStringShort());
+            return;
+        }
+
+        if(pmn1->addr != mnc.addr) {
+            LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- addr %s does not match %s\n", mnc.addr.ToString(), pmn1->addr.ToString());
+            return;
+        }
+
+        if(!CMessageSigner::VerifyMessage(pmn1->pubKeyMasternode, mnc.vchSig1, strMessage1, strError)) {
+            LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- VerifyMessage() for masternode1 failed, error: %s\n", strError);
+            return;
+        }
+
+        if(!CMessageSigner::VerifyMessage(pmn2->pubKeyMasternode, mnc.vchSig2, strMessage2, strError)) {
+            LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- VerifyMessage() for masternode2 failed, error: %s\n", strError);
+            return;
+        }
+
+        if(!pmn1->IsPoSeVerified()) {
+            pmn1->DecreasePoSeBanScore();
+        }
+        mnc.Relay();
+
+        LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- verified masternode %s for addr %s\n",
+                  pmn1->vin.prevout.ToStringShort(), pmn1->addr.ToString());
+
+        // increase ban score for everyone else with the same addr
+        int nCount = 0;
+        for (auto& mnpair : mapMasternodes) {
+            if(mnpair.second.addr != mnc.addr || mnpair.first == mnc.vin1.prevout) continue;
+            mnpair.second.IncreasePoSeBanScore();
+            nCount++;
+            LogPrint("masternode", "CMasternodeMan::ProcessVerifyBroadcast -- increased PoSe ban score for %s addr %s, new score %d\n",
+                     mnpair.first.ToStringShort(), mnpair.second.addr.ToString(), mnpair.second.nPoSeBanScore);
+        }
+        if(nCount)
+            LogPrintf("CMasternodeMan::ProcessVerifyBroadcast -- PoSe score increased for %d fake masternodes, addr %s\n",
+                      nCount, pmn1->addr.ToString());
+    }
 
 }
 
