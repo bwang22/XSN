@@ -1109,9 +1109,11 @@ bool CMasternodeMan::SendChallengeRequest(const CAddress &addr, const std::vecto
         return false;
     }
 
+    // chainActive[1000]->GetBlockHash()
+
     netfulfilledman.AddFulfilledRequest(addr, strprintf("%s", NetMsgType::MNCHALLENGE)+"-request");
     // use random nonce, store it and require node to reply with correct one later
-    CMasternodeChallenge mnc(addr, GetRandInt(999999), nCachedBlockHeight - 1);
+    CMasternodeChallenge mnc(addr, GetRandInt(999999), nCachedBlockHeight - 1, 1000, 20);
     mWeAskedForChallengeVerification[addr] = mnc;
     LogPrintf("CMasternodeMan::SendVerifyRequest -- verifying node using nonce %d addr=%s\n", mnc.nonce, addr.ToString());
     connman.PushMessage(pnode, NetMsgType::MNCHALLENGE, mnc);
@@ -1390,15 +1392,24 @@ void CMasternodeMan::SendChallengeReply(CNode *pnode, CMasternodeChallenge &mnc,
         return;
     }
 
-    std::string strMessage = strprintf("%s%d%s", activeMasternode.service.ToString(false), mnc.nonce, blockHash.ToString());
+    //    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+
+    //    for(int i = mnc.nRangeStart; i < mnc.nRangeStart + mnc.nBlockCount; i++ )
+    //    {
+
+    //        ss << chainActive[i]->GetBlockHash();
+    //    }
+
+
+    std::string strMessage = strprintf("%s%d%s%s", activeMasternode.service.ToString(false), mnc.nonce, blockHash.ToString(), HashMessageOfBlocks(mnc));
 
     if(!CMessageSigner::SignMessage(strMessage, mnc.vchSig1, activeMasternode.keyMasternode)) {
         LogPrintf("MasternodeMan::SendVerifyReply -- SignMessage() failed\n");
         return;
     }
 
-//    std::string str = "Hello world";
-//    mnc.vchSig1 = std::vector<unsigned char>(str.begin(), str.end());
+    //    std::string str = "Hello world";
+    //    mnc.vchSig1 = std::vector<unsigned char>(str.begin(), str.end());
 
     std::string strError;
 
@@ -1478,16 +1489,16 @@ void CMasternodeMan::ProcessChallengeReply(CNode *pnode, CMasternodeChallenge &m
                     mnc.addr = mnpair.second.addr;
                     mnc.vin1 = mnpair.second.vin;
                     mnc.vin2 = CTxIn(activeMasternode.outpoint);
-                    std::string strMessage2 = strprintf("%s%d%s%s%s", mnc.addr.ToString(false), mnc.nonce, blockHash.ToString(),
-                                                        mnc.vin1.prevout.ToStringShort(), mnc.vin2.prevout.ToStringShort());
+                    std::string strMessage2 = strprintf("%s%d%s%s%s%s", mnc.addr.ToString(false), mnc.nonce, blockHash.ToString(),
+                                                        mnc.vin1.prevout.ToStringShort(), mnc.vin2.prevout.ToStringShort(), HashMessageOfBlocks(mnc));
                     // ... and sign it
                     if(!CMessageSigner::SignMessage(strMessage2, mnc.vchSig2, activeMasternode.keyMasternode)) {
                         LogPrintf("MasternodeMan::ProcessVerifyReply -- SignMessage() failed\n");
                         return;
                     }
 
-//                    std::string str = "Hello world";
-//                    mnc.vchSig2 = std::vector<unsigned char>(str.begin(), str.end());
+                    //                    std::string str = "Hello world";
+                    //                    mnc.vchSig2 = std::vector<unsigned char>(str.begin(), str.end());
 
                     std::string strError;
 
@@ -1635,6 +1646,19 @@ void CMasternodeMan::ProcessChallengeBroadcast(CNode *pnode, const CMasternodeCh
                       nCount, pmn1->addr.ToString());
     }
 
+}
+
+uint256 CMasternodeMan::HashMessageOfBlocks(CMasternodeChallenge &mnc)
+{
+    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+
+    for(int i = mnc.nRangeStart; i < mnc.nRangeStart + mnc.nBlockCount; i++ )
+    {
+
+        ss << chainActive[i]->GetBlockHash();
+    }
+
+    return ss.GetHash();
 }
 
 std::string CMasternodeMan::ToString() const

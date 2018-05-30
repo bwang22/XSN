@@ -417,13 +417,17 @@ public:
     int nBlockHeight{};
     std::vector<unsigned char> vchSig1{};
     std::vector<unsigned char> vchSig2{};
+    int nRangeStart{};
+    int nBlockCount{};
 
     CMasternodeChallenge() = default;
 
-    CMasternodeChallenge(CService addr, int nonce, int nBlockHeight) :
+    CMasternodeChallenge(CService addr, int nonce, int nBlockHeight, int nRangeStart, int nBlockCount) :
         addr(addr),
         nonce(nonce),
-        nBlockHeight(nBlockHeight)
+        nBlockHeight(nBlockHeight),
+        nRangeStart(nRangeStart),
+        nBlockCount(nBlockCount)
     {}
 
     ADD_SERIALIZE_METHODS;
@@ -437,22 +441,26 @@ public:
         READWRITE(nBlockHeight);
         READWRITE(vchSig1);
         READWRITE(vchSig2);
+        READWRITE(nRangeStart);
+        READWRITE(nBlockCount);
     }
 
     uint256 GetHash() const
     {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss << 228;
-        //        ss << vin2;
-        //        ss << addr;
-        //        ss << nonce;
-        //        ss << nBlockHeight;
+        ss << vin1;
+        ss << vin2;
+        ss << addr;
+        ss << nonce;
+        ss << nBlockHeight;
+        ss << nRangeStart ;
+        ss << nBlockCount ;
         return ss.GetHash();
     }
 
     void Relay() const
     {
-        CInv inv(MSG_MASTERNODE_VERIFY, GetHash());
+        CInv inv(MSG_MASTERNODE_CHALLENGE, GetHash());
         g_connman->RelayInv(inv);
     }
 

@@ -200,6 +200,9 @@ public:
     void ProcessChallengeReply(CNode* pnode, CMasternodeChallenge& mnc);
     void ProcessChallengeBroadcast(CNode* pnode, const CMasternodeChallenge& mnc);
 
+    ///Get hash message of random blocks
+    uint256 HashMessageOfBlocks(CMasternodeChallenge& mnc);
+
     /// Return the number of (unique) Masternodes
     int size() { return mapMasternodes.size(); }
 
