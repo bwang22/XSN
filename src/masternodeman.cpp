@@ -992,6 +992,7 @@ void CMasternodeMan::DoFullVerificationStep(CConnman& connman)
         }
         LogPrint("masternode", "CMasternodeMan::DoFullVerificationStep -- Verifying masternode %s rank %d/%d address %s\n",
                  it->second.vin.prevout.ToStringShort(), it->first, nRanksTotal, it->second.addr.ToString());
+
         if(SendVerifyRequest(CAddress(it->second.addr, NODE_NETWORK), vSortedByAddr, connman)) {
             nCount++;
             if(nCount >= MAX_POSE_CONNECTIONS) break;
@@ -1379,7 +1380,7 @@ void CMasternodeMan::SendChallengeReply(CNode *pnode, CMasternodeChallenge &mnc,
 
     std::cout << "Challenge reply"<< ": ---"<< "---" << std::endl;
 
-    if(netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-reply")) {
+    if(netfulfilledman.HasFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNCHALLENGE)+"-reply")) {
         // peer should not ask us that often
         LogPrintf("MasternodeMan::SendVerifyReply -- ERROR: peer already asked me recently, peer=%d\n", pnode->id);
         Misbehaving(pnode->id, 20);
@@ -1392,16 +1393,7 @@ void CMasternodeMan::SendChallengeReply(CNode *pnode, CMasternodeChallenge &mnc,
         return;
     }
 
-    //    CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-
-    //    for(int i = mnc.nRangeStart; i < mnc.nRangeStart + mnc.nBlockCount; i++ )
-    //    {
-
-    //        ss << chainActive[i]->GetBlockHash();
-    //    }
-
-
-    std::string strMessage = strprintf("%s%d%s%s", activeMasternode.service.ToString(false), mnc.nonce, blockHash.ToString(), HashMessageOfBlocks(mnc));
+    std::string strMessage = strprintf("%s%d%s%s", activeMasternode.service.ToString(false), mnc.nonce, blockHash.ToString(), HashMessageOfBlocks(mnc).ToString());
 
     if(!CMessageSigner::SignMessage(strMessage, mnc.vchSig1, activeMasternode.keyMasternode)) {
         LogPrintf("MasternodeMan::SendVerifyReply -- SignMessage() failed\n");
@@ -1490,7 +1482,7 @@ void CMasternodeMan::ProcessChallengeReply(CNode *pnode, CMasternodeChallenge &m
                     mnc.vin1 = mnpair.second.vin;
                     mnc.vin2 = CTxIn(activeMasternode.outpoint);
                     std::string strMessage2 = strprintf("%s%d%s%s%s%s", mnc.addr.ToString(false), mnc.nonce, blockHash.ToString(),
-                                                        mnc.vin1.prevout.ToStringShort(), mnc.vin2.prevout.ToStringShort(), HashMessageOfBlocks(mnc));
+                                                        mnc.vin1.prevout.ToStringShort(), mnc.vin2.prevout.ToStringShort(), HashMessageOfBlocks(mnc).ToString());
                     // ... and sign it
                     if(!CMessageSigner::SignMessage(strMessage2, mnc.vchSig2, activeMasternode.keyMasternode)) {
                         LogPrintf("MasternodeMan::ProcessVerifyReply -- SignMessage() failed\n");
