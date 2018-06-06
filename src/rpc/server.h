@@ -190,6 +190,7 @@ extern UniValue clearbanned(const UniValue& params, bool fHelp);
 extern UniValue setnetworkactive(const UniValue& params, bool fHelp);
 
 extern UniValue masternodechallenge(const UniValue& params, bool fHelp);
+extern UniValue scrypt1024(const UniValue& params, bool fHelp);
 
 extern UniValue dumpprivkey(const UniValue& params, bool fHelp); // in rpcdump.cpp
 extern UniValue importprivkey(const UniValue& params, bool fHelp);

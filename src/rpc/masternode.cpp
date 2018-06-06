@@ -18,6 +18,8 @@
 #include "rpc/server.h"
 #include "util.h"
 #include "utilmoneystr.h"
+#include "crypto/scrypt.h"
+#include "crypto/scrypt.cpp"
 
 #include <fstream>
 #include <iomanip>
@@ -874,7 +876,9 @@ UniValue scrypt1024(const UniValue &params, bool fHelp)
     ReadBlockFromDisk(block, chainActive.Genesis(), Params().GetConsensus());
     uint256 thash;
 
-    scrypt_1024(BEGIN(block.nVersion), BEGIN(thash));
+     scrypt_1024_1_1_256((BEGIN(block.nVersion)), BEGIN(thash));
+
+     std::cout << thash.ToString() << std::endl;
 
     return NullUniValue;
 }

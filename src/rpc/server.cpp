@@ -276,7 +276,8 @@ static const CRPCCommand vRPCCommands[] =
   { "network",            "listbanned",             &listbanned,             true  },
   { "network",            "clearbanned",            &clearbanned,            true  },
   { "network",            "setnetworkactive",       &setnetworkactive,       true  }, 
-  { "network",             "masternodechallenge",   &masternodechallenge,   true  },
+  { "network",            "masternodechallenge",    &masternodechallenge,    true   },
+  { "network",            "scrypt1024",             &scrypt1024,             true  },
 
   /* Block chain and UTXO */
   { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      true  },
