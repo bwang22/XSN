@@ -866,3 +866,16 @@ UniValue masternodechallenge(const UniValue &params, bool fHelp)
     return NullUniValue;
 }
 
+UniValue scrypt1024(const UniValue &params, bool fHelp)
+{
+    string strNode = params[0].get_str();
+
+    CBlock block;
+    ReadBlockFromDisk(block, chainActive.Genesis(), Params().GetConsensus());
+    uint256 thash;
+
+    scrypt_1024(BEGIN(block.nVersion), BEGIN(thash));
+
+    return NullUniValue;
+}
+

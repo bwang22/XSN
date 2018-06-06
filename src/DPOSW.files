@@ -53,6 +53,7 @@ qt/tposaddressestablemodel.cpp
 qt/tposaddressestablemodel.h
 qt/tpospage.cpp
 qt/tpospage.h
+rpc/governance.cpp
 test/DoS_tests.cpp
 test/Makefile
 test/README.md

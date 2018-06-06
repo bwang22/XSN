@@ -1110,11 +1110,9 @@ bool CMasternodeMan::SendChallengeRequest(const CAddress &addr, const std::vecto
         return false;
     }
 
-    // chainActive[1000]->GetBlockHash()
-
     netfulfilledman.AddFulfilledRequest(addr, strprintf("%s", NetMsgType::MNCHALLENGE)+"-request");
     // use random nonce, store it and require node to reply with correct one later
-    CMasternodeChallenge mnc(addr, GetRandInt(999999), nCachedBlockHeight - 1, 1000, 20);
+    CMasternodeChallenge mnc(addr, GetRandInt(999999), nCachedBlockHeight - 1, 40, 10);
     mWeAskedForChallengeVerification[addr] = mnc;
     LogPrintf("CMasternodeMan::SendVerifyRequest -- verifying node using nonce %d addr=%s\n", mnc.nonce, addr.ToString());
     connman.PushMessage(pnode, NetMsgType::MNCHALLENGE, mnc);
