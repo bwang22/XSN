@@ -133,3 +133,6 @@ xsn-cli
 xsnd
 xsn-qt
 make
+
+# IDE files
+.idea/
