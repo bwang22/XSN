@@ -3,6 +3,9 @@ XSN Core integration/staging tree
 
 [![Build Status](https://api.travis-ci.org/X9Developers/XSN.svg?branch=master)](https://travis-ci.org/X9Developers/XSN)
 
+Stakenet Cloud
+----------------
+
 https://stakenet.io
 
 What is XSN?
@@ -60,6 +63,56 @@ Changes should be tested by somebody other than the developer who wrote the
 code. This is especially important for large or high-risk changes. It is useful
 to add a test plan to the pull request description if testing the changes is
 not straightforward.
+
+Running with Docker
+-------
+
+If you are already familiar with Docker, then running XSN with Docker might be the the easier method for you. To run XSN using this method, first install [Docker](https://docs.docker.com/install/). After this you may
+continue with the following instructions.
+
+Please note that we currently don't support the GUI when running with Docker. Therefore, you can only use RPC (via HTTP or the `xsn-cli` utility) to interact with XSN via this method.
+
+Right now we don't store the image in docker hub, so you need to build it on your own:
+
+```sh
+docker build . -t xsn
+```
+
+Start XSN daemon: ( you might consider to bind custom ports in case you want to run a node or make usage of the json-rpc api [https://docs.docker.com/engine/reference/run/](https://docs.docker.com/engine/reference/run/))
+
+```sh
+docker run -d -P --name xsn xsn:latest
+```
+
+View current block count (this might take a while since the daemon needs to find other nodes and download blocks first):
+
+```sh
+docker exec xsn xsn-cli getblockcount
+```
+
+View connected nodes:
+
+```sh
+docker exec xsn xsn-cli getpeerinfo
+```
+
+Stop daemon:
+
+```sh
+docker stop xsn
+```
+
+Backup wallet:
+
+```sh
+docker cp xsn:/home/xsn/.xsncore/wallet.dat .
+```
+
+Start daemon again:
+
+```sh
+docker start xsn
+```
 
 Translations
 ------------
